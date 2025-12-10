@@ -2,6 +2,8 @@ import { TodoInput } from '@/components/TodoInput';
 import { TodoList } from '@/components/TodoList';
 import { TodoFilters } from '@/components/TodoFilters';
 import { TodoStats } from '@/components/TodoStats';
+import { CategoryFilter } from '@/components/CategoryFilter';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useTodos } from '@/hooks/useTodos';
 import { useNotifications } from '@/hooks/useNotifications';
 import { Sparkles } from 'lucide-react';
@@ -14,22 +16,31 @@ const Index = () => {
     toggleTodo,
     deleteTodo,
     updateTodo,
+    reorderTodos,
     markAsNotified,
     filter,
     setFilter,
     sortBy,
     setSortBy,
+    categoryFilter,
+    setCategoryFilter,
+    categories,
     stats,
   } = useTodos();
 
   useNotifications(allTodos, markAsNotified);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background transition-colors duration-300">
       {/* Decorative background */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
+      </div>
+
+      {/* Theme Toggle - Fixed Position */}
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle />
       </div>
 
       <div className="container max-w-2xl mx-auto px-4 py-8 md:py-12">
@@ -54,7 +65,16 @@ const Index = () => {
 
         {/* Input */}
         <div className="mb-6">
-          <TodoInput onAdd={addTodo} />
+          <TodoInput onAdd={addTodo} categories={categories} />
+        </div>
+
+        {/* Category Filter */}
+        <div className="mb-4">
+          <CategoryFilter
+            categories={categories}
+            selectedCategory={categoryFilter}
+            onSelectCategory={setCategoryFilter}
+          />
         </div>
 
         {/* Filters */}
@@ -74,10 +94,13 @@ const Index = () => {
           onToggle={toggleTodo}
           onDelete={deleteTodo}
           onUpdate={updateTodo}
+          onReorder={reorderTodos}
+          categories={categories}
         />
 
         {/* Footer */}
-        <footer className="text-center mt-12 text-sm text-muted-foreground">
+        <footer className="text-center mt-12 text-sm text-muted-foreground space-y-2">
+          <p>ลากที่ไอคอน ⋮⋮ เพื่อจัดลำดับงาน</p>
           <p>กดปุ่มถูกเพื่อทำเครื่องหมายงานที่เสร็จแล้ว</p>
         </footer>
       </div>
