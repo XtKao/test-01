@@ -1,17 +1,21 @@
 import { useState } from 'react';
-import { Check, Trash2, Calendar, Clock, Flag, Edit3, X } from 'lucide-react';
-import { Todo, Priority } from '@/types/todo';
+import { Check, Trash2, Calendar, Clock, Flag, Edit3, X, GripVertical } from 'lucide-react';
+import { Todo, Priority, Category } from '@/types/todo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { format, isToday, isTomorrow, isPast } from 'date-fns';
 import { th } from 'date-fns/locale';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface TodoItemProps {
   todo: Todo;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: Partial<Todo>) => void;
+  categories: Category[];
+  isDragging?: boolean;
 }
 
 const priorityConfig = {
@@ -38,9 +42,22 @@ const priorityConfig = {
   },
 };
 
-export function TodoItem({ todo, onToggle, onDelete, onUpdate }: TodoItemProps) {
+export function TodoItem({ todo, onToggle, onDelete, onUpdate, categories, isDragging }: TodoItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(todo.title);
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id: todo.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   const handleSave = () => {
     if (editTitle.trim()) {
@@ -56,16 +73,29 @@ export function TodoItem({ todo, onToggle, onDelete, onUpdate }: TodoItemProps) 
   };
 
   const isOverdue = todo.dueDate && isPast(todo.dueDate) && !todo.completed;
+  const category = categories.find(c => c.id === todo.categoryId);
 
   return (
     <div
+      ref={setNodeRef}
+      style={style}
       className={cn(
         'task-card group',
         todo.completed && 'opacity-60',
-        isOverdue && 'border-destructive/50'
+        isOverdue && 'border-destructive/50',
+        isDragging && 'opacity-50 shadow-xl scale-105'
       )}
     >
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-3">
+        {/* Drag Handle */}
+        <button
+          {...attributes}
+          {...listeners}
+          className="flex-shrink-0 p-1 -ml-1 cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-muted-foreground transition-colors touch-none"
+        >
+          <GripVertical className="h-5 w-5" />
+        </button>
+
         {/* Checkbox */}
         <button
           onClick={() => onToggle(todo.id)}
@@ -114,7 +144,21 @@ export function TodoItem({ todo, onToggle, onDelete, onUpdate }: TodoItemProps) 
               </p>
 
               {/* Meta info */}
-              <div className="flex flex-wrap items-center gap-3 mt-2">
+              <div className="flex flex-wrap items-center gap-2 mt-2">
+                {/* Category Badge */}
+                {category && (
+                  <span
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+                    style={{
+                      backgroundColor: `${category.color}20`,
+                      color: category.color,
+                    }}
+                  >
+                    <span>{category.icon}</span>
+                    {category.name}
+                  </span>
+                )}
+
                 {/* Priority Badge */}
                 <span
                   className={cn(

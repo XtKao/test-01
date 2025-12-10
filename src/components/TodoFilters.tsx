@@ -1,6 +1,6 @@
 import { FilterType, SortType } from '@/types/todo';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, CheckCircle2, Circle, ListTodo } from 'lucide-react';
+import { ArrowUpDown, CheckCircle2, Circle, ListTodo, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -27,7 +27,8 @@ const filterOptions: { value: FilterType; label: string; icon: React.ReactNode }
   { value: 'completed', label: 'เสร็จแล้ว', icon: <CheckCircle2 className="h-4 w-4" /> },
 ];
 
-const sortOptions: { value: SortType; label: string }[] = [
+const sortOptions: { value: SortType; label: string; icon?: React.ReactNode }[] = [
+  { value: 'manual', label: 'ลากจัดเรียง', icon: <GripVertical className="h-4 w-4" /> },
   { value: 'priority', label: 'ความสำคัญ' },
   { value: 'dueDate', label: 'กำหนดส่ง' },
   { value: 'createdAt', label: 'วันที่สร้าง' },
@@ -58,7 +59,7 @@ export function TodoFilters({ filter, setFilter, sortBy, setSortBy, stats }: Tod
             )}
           >
             {option.icon}
-            {option.label}
+            <span className="hidden sm:inline">{option.label}</span>
             <span
               className={cn(
                 'px-1.5 py-0.5 rounded-md text-xs',
@@ -78,7 +79,7 @@ export function TodoFilters({ filter, setFilter, sortBy, setSortBy, stats }: Tod
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="gap-2 bg-secondary/50 hover:bg-secondary">
             <ArrowUpDown className="h-4 w-4" />
-            จัดเรียงตาม: {sortOptions.find(s => s.value === sortBy)?.label}
+            <span className="hidden sm:inline">จัดเรียง:</span> {sortOptions.find(s => s.value === sortBy)?.label}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
@@ -86,8 +87,9 @@ export function TodoFilters({ filter, setFilter, sortBy, setSortBy, stats }: Tod
             <DropdownMenuItem
               key={option.value}
               onClick={() => setSortBy(option.value)}
-              className={cn(sortBy === option.value && 'bg-accent')}
+              className={cn('gap-2', sortBy === option.value && 'bg-accent')}
             >
+              {option.icon}
               {option.label}
             </DropdownMenuItem>
           ))}

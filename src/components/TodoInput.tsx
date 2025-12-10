@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Plus, Calendar, Clock, Flag } from 'lucide-react';
+import { Plus, Calendar, Clock, Flag, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Priority } from '@/types/todo';
+import { Priority, Category } from '@/types/todo';
 import {
   Popover,
   PopoverContent,
@@ -19,8 +19,10 @@ interface TodoInputProps {
     priority: Priority,
     description?: string,
     dueDate?: Date,
-    reminderTime?: Date
+    reminderTime?: Date,
+    categoryId?: string
   ) => void;
+  categories: Category[];
 }
 
 const priorityConfig = {
@@ -29,11 +31,12 @@ const priorityConfig = {
   low: { label: 'ต่ำ', color: 'text-success', bg: 'bg-success/10' },
 };
 
-export function TodoInput({ onAdd }: TodoInputProps) {
+export function TodoInput({ onAdd, categories }: TodoInputProps) {
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
   const [dueDate, setDueDate] = useState<Date | undefined>();
   const [reminderTime, setReminderTime] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -47,13 +50,16 @@ export function TodoInput({ onAdd }: TodoInputProps) {
       reminder.setHours(hours, minutes, 0, 0);
     }
 
-    onAdd(title.trim(), priority, undefined, dueDate, reminder);
+    onAdd(title.trim(), priority, undefined, dueDate, reminder, selectedCategory);
     setTitle('');
     setPriority('medium');
     setDueDate(undefined);
     setReminderTime('');
+    setSelectedCategory(undefined);
     setIsExpanded(false);
   };
+
+  const selectedCategoryData = categories.find(c => c.id === selectedCategory);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -96,6 +102,55 @@ export function TodoInput({ onAdd }: TodoInputProps) {
                 </button>
               ))}
             </div>
+
+            {/* Category Selection */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className={cn(
+                    'h-9 px-3 bg-secondary/50 hover:bg-secondary gap-2',
+                    selectedCategory && 'text-foreground'
+                  )}
+                  style={{
+                    backgroundColor: selectedCategoryData?.color ? `${selectedCategoryData.color}20` : undefined,
+                  }}
+                >
+                  {selectedCategoryData ? (
+                    <>
+                      <span>{selectedCategoryData.icon}</span>
+                      {selectedCategoryData.name}
+                    </>
+                  ) : (
+                    <>
+                      <Tag className="h-4 w-4" />
+                      หมวดหมู่
+                    </>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-2" align="start">
+                <div className="space-y-1">
+                  {categories.map((category) => (
+                    <button
+                      key={category.id}
+                      type="button"
+                      onClick={() => setSelectedCategory(category.id)}
+                      className={cn(
+                        'w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all',
+                        selectedCategory === category.id
+                          ? 'bg-primary/10 text-primary'
+                          : 'hover:bg-secondary'
+                      )}
+                    >
+                      <span>{category.icon}</span>
+                      {category.name}
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
 
             {/* Due Date */}
             <Popover>

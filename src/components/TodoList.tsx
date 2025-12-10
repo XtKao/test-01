@@ -1,15 +1,63 @@
-import { Todo } from '@/types/todo';
+import { useState } from 'react';
+import { Todo, Category } from '@/types/todo';
 import { TodoItem } from './TodoItem';
-import { CheckCircle2, ListTodo } from 'lucide-react';
+import { ListTodo } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 
 interface TodoListProps {
   todos: Todo[];
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: Partial<Todo>) => void;
+  onReorder: (activeId: string, overId: string) => void;
+  categories: Category[];
 }
 
-export function TodoList({ todos, onToggle, onDelete, onUpdate }: TodoListProps) {
+export function TodoList({ todos, onToggle, onDelete, onUpdate, onReorder, categories }: TodoListProps) {
+  const [activeId, setActiveId] = useState<string | null>(null);
+  
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      onReorder(active.id as string, over.id as string);
+    }
+    
+    setActiveId(null);
+  };
+
+  const activeTodo = activeId ? todos.find(t => t.id === activeId) : null;
+
   if (todos.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in">
@@ -23,21 +71,44 @@ export function TodoList({ todos, onToggle, onDelete, onUpdate }: TodoListProps)
   }
 
   return (
-    <div className="space-y-3">
-      {todos.map((todo, index) => (
-        <div
-          key={todo.id}
-          className="animate-fade-in"
-          style={{ animationDelay: `${index * 50}ms` }}
-        >
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext items={todos.map(t => t.id)} strategy={verticalListSortingStrategy}>
+        <div className="space-y-3">
+          {todos.map((todo, index) => (
+            <div
+              key={todo.id}
+              className="animate-fade-in"
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <TodoItem
+                todo={todo}
+                onToggle={onToggle}
+                onDelete={onDelete}
+                onUpdate={onUpdate}
+                categories={categories}
+              />
+            </div>
+          ))}
+        </div>
+      </SortableContext>
+      
+      <DragOverlay>
+        {activeTodo ? (
           <TodoItem
-            todo={todo}
+            todo={activeTodo}
             onToggle={onToggle}
             onDelete={onDelete}
             onUpdate={onUpdate}
+            categories={categories}
+            isDragging
           />
-        </div>
-      ))}
-    </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 }
