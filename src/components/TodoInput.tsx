@@ -173,6 +173,7 @@ export function TodoInput({ onAdd, categories }: TodoInputProps) {
                   selected={dueDate}
                   onSelect={setDueDate}
                   initialFocus
+                  className="pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
