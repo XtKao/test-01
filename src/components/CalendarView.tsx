@@ -1,17 +1,17 @@
-import { useState, useMemo, useRef, useCallback } from 'react';
-import { Calendar } from '@/components/ui/calendar';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import { DayPicker, DayProps } from 'react-day-picker';
 import { Todo, Category, Priority } from '@/types/todo';
 import { format, isSameDay } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { Flag, CheckCircle2, Plus, Eye } from 'lucide-react';
+import { Flag, CheckCircle2, Plus, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -46,6 +46,7 @@ export function CalendarView({ todos, categories, onAddTodo }: CalendarViewProps
   
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const isLongPress = useRef(false);
+  const pressedDate = useRef<Date | null>(null);
 
   const todosWithDueDate = useMemo(() => {
     return todos.filter(todo => todo.dueDate);
@@ -55,30 +56,21 @@ export function CalendarView({ todos, categories, onAddTodo }: CalendarViewProps
     return todosWithDueDate.map(todo => todo.dueDate!);
   }, [todosWithDueDate]);
 
-  const getTodosForDate = (date: Date) => {
+  const getTodosForDate = useCallback((date: Date) => {
     return todosWithDueDate.filter(todo => 
       todo.dueDate && isSameDay(todo.dueDate, date)
     );
-  };
+  }, [todosWithDueDate]);
+
+  const getTodoCountForDate = useCallback((date: Date) => {
+    return getTodosForDate(date).length;
+  }, [getTodosForDate]);
 
   const getCategory = (categoryId?: string) => {
     return categories.find(c => c.id === categoryId);
   };
 
-  // Custom day content to show indicator for days with todos
-  const modifiers = useMemo(() => {
-    const hasTodos: Date[] = [];
-
-    todosWithDueDate.forEach(todo => {
-      if (todo.dueDate) {
-        hasTodos.push(todo.dueDate);
-      }
-    });
-
-    return { hasTodos };
-  }, [todosWithDueDate]);
-
-  const handleDayClick = (date: Date) => {
+  const handleDayClick = useCallback((date: Date) => {
     // If it was a long press, don't trigger click action
     if (isLongPress.current) {
       isLongPress.current = false;
@@ -87,10 +79,11 @@ export function CalendarView({ todos, categories, onAddTodo }: CalendarViewProps
     
     setSelectedDate(date);
     setIsViewDialogOpen(true);
-  };
+  }, []);
 
-  const handleDayMouseDown = useCallback((date: Date) => {
+  const handlePointerDown = useCallback((date: Date) => {
     isLongPress.current = false;
+    pressedDate.current = date;
     longPressTimer.current = setTimeout(() => {
       isLongPress.current = true;
       setSelectedDate(date);
@@ -101,14 +94,14 @@ export function CalendarView({ todos, categories, onAddTodo }: CalendarViewProps
     }, LONG_PRESS_DURATION);
   }, []);
 
-  const handleDayMouseUp = useCallback(() => {
+  const handlePointerUp = useCallback(() => {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
     }
   }, []);
 
-  const handleDayMouseLeave = useCallback(() => {
+  const handlePointerLeave = useCallback(() => {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
@@ -134,39 +127,77 @@ export function CalendarView({ todos, categories, onAddTodo }: CalendarViewProps
 
   const selectedDateTodos = selectedDate ? getTodosForDate(selectedDate) : [];
 
+  // Custom Day component
+  const CustomDay = useCallback(({ date, displayMonth, ...props }: DayProps) => {
+    const todoCount = getTodoCountForDate(date);
+    const isOutside = date.getMonth() !== displayMonth.getMonth();
+    const isToday = isSameDay(date, new Date());
+    const hasTodos = todoCount > 0;
+    
+    return (
+      <button
+        type="button"
+        className={cn(
+          buttonVariants({ variant: "ghost" }),
+          "h-9 w-9 p-0 font-normal relative",
+          isToday && "bg-accent text-accent-foreground",
+          isOutside && "text-muted-foreground opacity-50",
+          hasTodos && "ring-2 ring-primary ring-offset-1"
+        )}
+        onClick={() => handleDayClick(date)}
+        onPointerDown={() => handlePointerDown(date)}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerLeave}
+        onContextMenu={(e) => e.preventDefault()}
+      >
+        {date.getDate()}
+        {hasTodos && (
+          <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+            {todoCount}
+          </span>
+        )}
+      </button>
+    );
+  }, [getTodoCountForDate, handleDayClick, handlePointerDown, handlePointerUp, handlePointerLeave]);
+
   return (
     <div className="space-y-6">
       <div className="glass rounded-2xl p-4 shadow-card">
         <p className="text-xs text-muted-foreground text-center mb-2">
           คลิกดูงาน • กดค้างเพิ่มงาน
         </p>
-        <Calendar
+        <DayPicker
           mode="multiple"
           selected={selectedDates}
-          className="mx-auto pointer-events-auto"
+          className="mx-auto pointer-events-auto p-3"
           locale={th}
-          modifiers={modifiers}
-          modifiersClassNames={{
-            hasTodos: 'has-todos',
+          classNames={{
+            months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+            month: "space-y-4",
+            caption: "flex justify-center pt-1 relative items-center",
+            caption_label: "text-sm font-medium",
+            nav: "space-x-1 flex items-center",
+            nav_button: cn(
+              buttonVariants({ variant: "outline" }),
+              "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+            ),
+            nav_button_previous: "absolute left-1",
+            nav_button_next: "absolute right-1",
+            table: "w-full border-collapse space-y-1",
+            head_row: "flex",
+            head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
+            row: "flex w-full mt-2",
+            cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+            day: cn(buttonVariants({ variant: "ghost" }), "h-9 w-9 p-0 font-normal"),
+            day_today: "bg-accent text-accent-foreground",
+            day_outside: "text-muted-foreground opacity-50",
+            day_disabled: "text-muted-foreground opacity-50",
+            day_hidden: "invisible",
           }}
-          onDayClick={handleDayClick}
-          onDayMouseEnter={() => {}}
           components={{
-            Day: ({ date, ...props }) => {
-              const dayNumber = date.getDate();
-              return (
-                <button
-                  {...props}
-                  onMouseDown={() => handleDayMouseDown(date)}
-                  onMouseUp={handleDayMouseUp}
-                  onMouseLeave={handleDayMouseLeave}
-                  onTouchStart={() => handleDayMouseDown(date)}
-                  onTouchEnd={handleDayMouseUp}
-                >
-                  {dayNumber}
-                </button>
-              );
-            },
+            IconLeft: () => <ChevronLeft className="h-4 w-4" />,
+            IconRight: () => <ChevronRight className="h-4 w-4" />,
+            Day: CustomDay,
           }}
         />
       </div>
