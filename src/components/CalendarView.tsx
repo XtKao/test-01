@@ -36,25 +36,17 @@ export function CalendarView({ todos, categories }: CalendarViewProps) {
     return categories.find(c => c.id === categoryId);
   };
 
-  // Custom day content to show dots for days with todos
+  // Custom day content to show indicator for days with todos
   const modifiers = useMemo(() => {
     const hasTodos: Date[] = [];
-    const hasHighPriority: Date[] = [];
-    const hasCompleted: Date[] = [];
 
     todosWithDueDate.forEach(todo => {
       if (todo.dueDate) {
         hasTodos.push(todo.dueDate);
-        if (todo.priority === 'high' && !todo.completed) {
-          hasHighPriority.push(todo.dueDate);
-        }
-        if (todo.completed) {
-          hasCompleted.push(todo.dueDate);
-        }
       }
     });
 
-    return { hasTodos, hasHighPriority, hasCompleted };
+    return { hasTodos };
   }, [todosWithDueDate]);
 
   return (
@@ -68,7 +60,6 @@ export function CalendarView({ todos, categories }: CalendarViewProps) {
           modifiers={modifiers}
           modifiersClassNames={{
             hasTodos: 'has-todos',
-            hasHighPriority: 'has-high-priority',
           }}
         />
       </div>
