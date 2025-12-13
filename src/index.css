@@ -201,22 +201,24 @@
 /* Calendar todo indicators */
 .has-todos {
   position: relative;
+  overflow: hidden;
 }
 
 .has-todos::after {
   content: '!';
   position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 14px;
-  height: 14px;
+  top: 1px;
+  right: 1px;
+  width: 12px;
+  height: 12px;
   background-color: hsl(var(--destructive));
   color: hsl(var(--destructive-foreground));
   border-radius: 50%;
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
+  z-index: 1;
 }
