@@ -1,14 +1,31 @@
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Calendar } from '@/components/ui/calendar';
-import { Todo, Category } from '@/types/todo';
+import { Todo, Category, Priority } from '@/types/todo';
 import { format, isSameDay } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { Flag, CheckCircle2 } from 'lucide-react';
+import { Flag, CheckCircle2, Plus } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface CalendarViewProps {
   todos: Todo[];
   categories: Category[];
+  onAddTodo?: (title: string, priority: Priority, categoryId?: string, dueDate?: Date, reminderTime?: Date) => void;
 }
 
 const priorityConfig = {
@@ -17,7 +34,13 @@ const priorityConfig = {
   low: { label: 'ต่ำ', color: 'text-success', bg: 'bg-success' },
 };
 
-export function CalendarView({ todos, categories }: CalendarViewProps) {
+export function CalendarView({ todos, categories, onAddTodo }: CalendarViewProps) {
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newTodoTitle, setNewTodoTitle] = useState('');
+  const [newTodoPriority, setNewTodoPriority] = useState<Priority>('medium');
+  const [newTodoCategory, setNewTodoCategory] = useState<string>('');
+
   const todosWithDueDate = useMemo(() => {
     return todos.filter(todo => todo.dueDate);
   }, [todos]);
@@ -49,6 +72,31 @@ export function CalendarView({ todos, categories }: CalendarViewProps) {
     return { hasTodos };
   }, [todosWithDueDate]);
 
+  const handleDayClick = (date: Date) => {
+    setSelectedDate(date);
+    setIsDialogOpen(true);
+    setNewTodoTitle('');
+    setNewTodoPriority('medium');
+    setNewTodoCategory('');
+  };
+
+  const handleAddTodo = () => {
+    if (!newTodoTitle.trim() || !selectedDate || !onAddTodo) return;
+    
+    onAddTodo(
+      newTodoTitle.trim(),
+      newTodoPriority,
+      newTodoCategory || undefined,
+      selectedDate,
+      undefined
+    );
+    
+    setIsDialogOpen(false);
+    setNewTodoTitle('');
+    setNewTodoPriority('medium');
+    setNewTodoCategory('');
+  };
+
   return (
     <div className="space-y-6">
       <div className="glass rounded-2xl p-4 shadow-card">
@@ -61,8 +109,96 @@ export function CalendarView({ todos, categories }: CalendarViewProps) {
           modifiersClassNames={{
             hasTodos: 'has-todos',
           }}
+          onDayClick={handleDayClick}
         />
       </div>
+
+      {/* Add Todo Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              เพิ่มงานสำหรับวันที่ {selectedDate && format(selectedDate, 'd MMMM yyyy', { locale: th })}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="todo-title">ชื่องาน</Label>
+              <Input
+                id="todo-title"
+                placeholder="พิมพ์ชื่องาน..."
+                value={newTodoTitle}
+                onChange={(e) => setNewTodoTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleAddTodo();
+                }}
+                maxLength={255}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>ความสำคัญ</Label>
+              <Select value={newTodoPriority} onValueChange={(v) => setNewTodoPriority(v as Priority)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">
+                    <span className="flex items-center gap-2">
+                      <Flag className="h-4 w-4 text-success" />
+                      ต่ำ
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="medium">
+                    <span className="flex items-center gap-2">
+                      <Flag className="h-4 w-4 text-warning" />
+                      กลาง
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="high">
+                    <span className="flex items-center gap-2">
+                      <Flag className="h-4 w-4 text-destructive" />
+                      สูง
+                    </span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {categories.length > 0 && (
+              <div className="space-y-2">
+                <Label>หมวดหมู่</Label>
+                <Select value={newTodoCategory} onValueChange={setNewTodoCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="เลือกหมวดหมู่ (ไม่บังคับ)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        <span className="flex items-center gap-2">
+                          <span>{cat.icon}</span>
+                          {cat.name}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <Button 
+              onClick={handleAddTodo} 
+              className="w-full"
+              disabled={!newTodoTitle.trim()}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              เพิ่มงาน
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Todos List by Date */}
       <div className="space-y-4">
@@ -71,6 +207,7 @@ export function CalendarView({ todos, categories }: CalendarViewProps) {
         {todosWithDueDate.length === 0 ? (
           <div className="glass rounded-2xl p-8 text-center">
             <p className="text-muted-foreground">ยังไม่มีงานที่กำหนดวัน</p>
+            <p className="text-sm text-muted-foreground mt-2">คลิกที่วันในปฏิทินเพื่อเพิ่มงานใหม่</p>
           </div>
         ) : (
           <div className="space-y-3">
