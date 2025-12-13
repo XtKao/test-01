@@ -162,7 +162,7 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="calendar" className="mt-0">
-            <CalendarView todos={allTodos} categories={categories} />
+            <CalendarView todos={allTodos} categories={categories} onAddTodo={addTodo} />
           </TabsContent>
         </Tabs>
       </div>
