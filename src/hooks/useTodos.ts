@@ -12,6 +12,7 @@ export function useTodos() {
   const [filter, setFilter] = useState<FilterType>('all');
   const [sortBy, setSortBy] = useState<SortType>('priority');
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Fetch todos from database
   const fetchTodos = useCallback(async () => {
@@ -284,6 +285,13 @@ export function useTodos() {
       if (filter === 'active' && todo.completed) return false;
       if (filter === 'completed' && !todo.completed) return false;
       if (categoryFilter && todo.categoryId !== categoryFilter) return false;
+      // ค้นหาด้วยคำค้น
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchTitle = todo.title.toLowerCase().includes(query);
+        const matchDescription = todo.description?.toLowerCase().includes(query);
+        if (!matchTitle && !matchDescription) return false;
+      }
       return true;
     })
     .sort((a, b) => {
@@ -329,6 +337,8 @@ export function useTodos() {
     setSortBy,
     categoryFilter,
     setCategoryFilter,
+    searchQuery,
+    setSearchQuery,
     categories,
     addCategory,
     updateCategory,
