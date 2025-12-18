@@ -9,6 +9,7 @@ import { CategoryManager } from '@/components/CategoryManager';
 import { CalendarView } from '@/components/CalendarView';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { UserMenu } from '@/components/UserMenu';
+import { SearchInput } from '@/components/SearchInput';
 import { useTodos } from '@/hooks/useTodos';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -36,6 +37,8 @@ const Index = () => {
     setSortBy,
     categoryFilter,
     setCategoryFilter,
+    searchQuery,
+    setSearchQuery,
     categories,
     addCategory,
     updateCategory,
@@ -127,6 +130,13 @@ const Index = () => {
               categories={categories}
               selectedCategory={categoryFilter}
               onSelectCategory={setCategoryFilter}
+            />
+
+            {/* Search */}
+            <SearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="ค้นหางาน..."
             />
 
             {/* Filters */}
