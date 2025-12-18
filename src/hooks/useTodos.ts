@@ -302,10 +302,15 @@ export function useTodos() {
       return b.createdAt.getTime() - a.createdAt.getTime();
     });
 
+  // กรอง todos ตามหมวดหมู่ก่อนคำนวณ stats
+  const todosForStats = categoryFilter 
+    ? todos.filter(t => t.categoryId === categoryFilter)
+    : todos;
+
   const stats = {
-    total: todos.length,
-    active: todos.filter(t => !t.completed).length,
-    completed: todos.filter(t => t.completed).length,
+    total: todosForStats.length,
+    active: todosForStats.filter(t => !t.completed).length,
+    completed: todosForStats.filter(t => t.completed).length,
   };
 
   return {
