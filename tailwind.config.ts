@@ -15,7 +15,7 @@ export default {
   	extend: {
   		fontFamily: {
   			sans: [
-  				'DM Sans',
+  				'Inter',
   				'ui-sans-serif',
   				'system-ui',
   				'-apple-system',
@@ -28,7 +28,7 @@ export default {
   				'sans-serif'
   			],
   			serif: [
-  				'Crimson Pro',
+  				'Lora',
   				'ui-serif',
   				'Georgia',
   				'Cambria',
@@ -37,7 +37,7 @@ export default {
   				'serif'
   			],
   			mono: [
-  				'SF Mono',
+  				'Space Mono',
   				'ui-monospace',
   				'SFMono-Regular',
   				'Menlo',
@@ -179,7 +179,7 @@ export default {
   					opacity: '0.7'
   				}
   			},
-  			'check': {
+  			check: {
   				from: {
   					transform: 'scale(0)'
   				},
@@ -197,7 +197,7 @@ export default {
   			'scale-in': 'scale-in 0.2s ease-out',
   			'bounce-gentle': 'bounce-gentle 2s ease-in-out infinite',
   			'pulse-gentle': 'pulse-gentle 2s ease-in-out infinite',
-  			'check': 'check 0.2s ease-out'
+  			check: 'check 0.2s ease-out'
   		},
   		boxShadow: {
   			'2xs': 'var(--shadow-2xs)',
