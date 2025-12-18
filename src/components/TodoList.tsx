@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Todo, Category } from '@/types/todo';
+import { Todo, Category, Subtask } from '@/types/todo';
 import { TodoItem } from './TodoItem';
 import { ListTodo } from 'lucide-react';
 import {
@@ -26,9 +26,26 @@ interface TodoListProps {
   onUpdate: (id: string, updates: Partial<Todo>) => void;
   onReorder: (activeId: string, overId: string) => void;
   categories: Category[];
+  subtasks: Record<string, Subtask[]>;
+  onAddSubtask: (todoId: string, title: string) => void;
+  onToggleSubtask: (todoId: string, subtaskId: string) => void;
+  onDeleteSubtask: (todoId: string, subtaskId: string) => void;
+  onFetchSubtasks: (todoId: string) => void;
 }
 
-export function TodoList({ todos, onToggle, onDelete, onUpdate, onReorder, categories }: TodoListProps) {
+export function TodoList({ 
+  todos, 
+  onToggle, 
+  onDelete, 
+  onUpdate, 
+  onReorder, 
+  categories,
+  subtasks,
+  onAddSubtask,
+  onToggleSubtask,
+  onDeleteSubtask,
+  onFetchSubtasks,
+}: TodoListProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   
   const sensors = useSensors(
@@ -91,6 +108,11 @@ export function TodoList({ todos, onToggle, onDelete, onUpdate, onReorder, categ
                 onDelete={onDelete}
                 onUpdate={onUpdate}
                 categories={categories}
+                subtasks={subtasks[todo.id] || []}
+                onAddSubtask={onAddSubtask}
+                onToggleSubtask={onToggleSubtask}
+                onDeleteSubtask={onDeleteSubtask}
+                onFetchSubtasks={onFetchSubtasks}
               />
             </div>
           ))}
@@ -106,6 +128,11 @@ export function TodoList({ todos, onToggle, onDelete, onUpdate, onReorder, categ
             onUpdate={onUpdate}
             categories={categories}
             isDragging
+            subtasks={subtasks[activeTodo.id] || []}
+            onAddSubtask={onAddSubtask}
+            onToggleSubtask={onToggleSubtask}
+            onDeleteSubtask={onDeleteSubtask}
+            onFetchSubtasks={onFetchSubtasks}
           />
         ) : null}
       </DragOverlay>

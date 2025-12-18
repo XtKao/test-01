@@ -11,6 +11,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { UserMenu } from '@/components/UserMenu';
 import { SearchInput } from '@/components/SearchInput';
 import { useTodos } from '@/hooks/useTodos';
+import { useSubtasks } from '@/hooks/useSubtasks';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
 import { Sparkles, ListTodo, Calendar } from 'lucide-react';
@@ -43,8 +44,18 @@ const Index = () => {
     addCategory,
     updateCategory,
     deleteCategory,
-    stats,
+    totalStats,
+    filteredStats,
+    categoryStats,
   } = useTodos();
+
+  const {
+    subtasks,
+    fetchSubtasks,
+    addSubtask,
+    toggleSubtask,
+    deleteSubtask,
+  } = useSubtasks();
 
   useNotifications(allTodos, markAsNotified);
 
@@ -120,7 +131,7 @@ const Index = () => {
 
           <TabsContent value="todos" className="space-y-6 mt-0">
             {/* Stats */}
-            <TodoStats stats={stats} />
+            <TodoStats stats={totalStats} />
 
             {/* Input */}
             <TodoInput onAdd={addTodo} categories={categories} />
@@ -130,6 +141,7 @@ const Index = () => {
               categories={categories}
               selectedCategory={categoryFilter}
               onSelectCategory={setCategoryFilter}
+              categoryStats={categoryStats}
             />
 
             {/* Search */}
@@ -145,7 +157,7 @@ const Index = () => {
               setFilter={setFilter}
               sortBy={sortBy}
               setSortBy={setSortBy}
-              stats={stats}
+              stats={filteredStats}
             />
 
             {/* Todo List */}
@@ -161,6 +173,11 @@ const Index = () => {
                 onUpdate={updateTodo}
                 onReorder={reorderTodos}
                 categories={categories}
+                subtasks={subtasks}
+                onAddSubtask={addSubtask}
+                onToggleSubtask={toggleSubtask}
+                onDeleteSubtask={deleteSubtask}
+                onFetchSubtasks={fetchSubtasks}
               />
             )}
 
