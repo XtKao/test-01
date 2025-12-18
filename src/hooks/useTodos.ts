@@ -310,16 +310,35 @@ export function useTodos() {
       return b.createdAt.getTime() - a.createdAt.getTime();
     });
 
-  // กรอง todos ตามหมวดหมู่ก่อนคำนวณ stats
-  const todosForStats = categoryFilter 
+  // Stats สำหรับ TodoStats (แสดงทั้งหมดไม่กรองตามหมวดหมู่)
+  const totalStats = {
+    total: todos.length,
+    active: todos.filter(t => !t.completed).length,
+    completed: todos.filter(t => t.completed).length,
+  };
+
+  // Stats สำหรับ TodoFilters (กรองตามหมวดหมู่ที่เลือก)
+  const todosForFilterStats = categoryFilter 
     ? todos.filter(t => t.categoryId === categoryFilter)
     : todos;
 
-  const stats = {
-    total: todosForStats.length,
-    active: todosForStats.filter(t => !t.completed).length,
-    completed: todosForStats.filter(t => t.completed).length,
+  const filteredStats = {
+    total: todosForFilterStats.length,
+    active: todosForFilterStats.filter(t => !t.completed).length,
+    completed: todosForFilterStats.filter(t => t.completed).length,
   };
+
+  // Stats สำหรับแต่ละหมวดหมู่ (progress bar)
+  const categoryStats = categories.reduce((acc, cat) => {
+    const catTodos = todos.filter(t => t.categoryId === cat.id);
+    const completed = catTodos.filter(t => t.completed).length;
+    acc[cat.id] = {
+      total: catTodos.length,
+      completed,
+      percentage: catTodos.length > 0 ? Math.round((completed / catTodos.length) * 100) : 0,
+    };
+    return acc;
+  }, {} as Record<string, { total: number; completed: number; percentage: number }>);
 
   return {
     todos: filteredAndSortedTodos,
@@ -343,7 +362,9 @@ export function useTodos() {
     addCategory,
     updateCategory,
     deleteCategory,
-    stats,
+    totalStats,
+    filteredStats,
+    categoryStats,
     refreshTodos: fetchTodos,
   };
 }

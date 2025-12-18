@@ -7,6 +7,14 @@ export type Category = {
   icon: string;
 };
 
+export interface Subtask {
+  id: string;
+  todoId: string;
+  title: string;
+  completed: boolean;
+  order: number;
+}
+
 export interface Todo {
   id: string;
   title: string;
@@ -19,6 +27,7 @@ export interface Todo {
   createdAt: Date;
   notified?: boolean;
   order: number;
+  subtasks?: Subtask[];
 }
 
 export type FilterType = 'all' | 'active' | 'completed';

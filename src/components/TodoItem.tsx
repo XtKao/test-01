@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Check, Trash2, Calendar, Clock, Flag, Edit3, X, GripVertical } from 'lucide-react';
-import { Todo, Priority, Category } from '@/types/todo';
+import { useState, useEffect } from 'react';
+import { Check, Trash2, Calendar, Clock, Edit3, X, GripVertical, Plus, ChevronDown, ChevronRight } from 'lucide-react';
+import { Todo, Priority, Category, Subtask } from '@/types/todo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -8,6 +8,7 @@ import { format, isToday, isTomorrow, isPast } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { Progress } from '@/components/ui/progress';
 
 interface TodoItemProps {
   todo: Todo;
@@ -16,6 +17,11 @@ interface TodoItemProps {
   onUpdate: (id: string, updates: Partial<Todo>) => void;
   categories: Category[];
   isDragging?: boolean;
+  subtasks: Subtask[];
+  onAddSubtask: (todoId: string, title: string) => void;
+  onToggleSubtask: (todoId: string, subtaskId: string) => void;
+  onDeleteSubtask: (todoId: string, subtaskId: string) => void;
+  onFetchSubtasks: (todoId: string) => void;
 }
 
 const priorityConfig = {
@@ -42,9 +48,24 @@ const priorityConfig = {
   },
 };
 
-export function TodoItem({ todo, onToggle, onDelete, onUpdate, categories, isDragging }: TodoItemProps) {
+export function TodoItem({ 
+  todo, 
+  onToggle, 
+  onDelete, 
+  onUpdate, 
+  categories, 
+  isDragging,
+  subtasks,
+  onAddSubtask,
+  onToggleSubtask,
+  onDeleteSubtask,
+  onFetchSubtasks,
+}: TodoItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(todo.title);
+  const [showSubtasks, setShowSubtasks] = useState(false);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+  const [subtasksLoaded, setSubtasksLoaded] = useState(false);
 
   const {
     attributes,
@@ -59,11 +80,25 @@ export function TodoItem({ todo, onToggle, onDelete, onUpdate, categories, isDra
     transition,
   };
 
+  useEffect(() => {
+    if (showSubtasks && !subtasksLoaded) {
+      onFetchSubtasks(todo.id);
+      setSubtasksLoaded(true);
+    }
+  }, [showSubtasks, subtasksLoaded, onFetchSubtasks, todo.id]);
+
   const handleSave = () => {
     if (editTitle.trim()) {
       onUpdate(todo.id, { title: editTitle.trim() });
     }
     setIsEditing(false);
+  };
+
+  const handleAddSubtask = () => {
+    if (newSubtaskTitle.trim()) {
+      onAddSubtask(todo.id, newSubtaskTitle.trim());
+      setNewSubtaskTitle('');
+    }
   };
 
   const formatDueDate = (date: Date) => {
@@ -74,6 +109,12 @@ export function TodoItem({ todo, onToggle, onDelete, onUpdate, categories, isDra
 
   const isOverdue = todo.dueDate && isPast(todo.dueDate) && !todo.completed;
   const category = categories.find(c => c.id === todo.categoryId);
+  
+  const subtaskProgress = subtasks.length > 0 ? {
+    completed: subtasks.filter(s => s.completed).length,
+    total: subtasks.length,
+    percentage: Math.round((subtasks.filter(s => s.completed).length / subtasks.length) * 100),
+  } : null;
 
   return (
     <div
@@ -134,17 +175,40 @@ export function TodoItem({ todo, onToggle, onDelete, onUpdate, categories, isDra
             </div>
           ) : (
             <>
-              <p
-                className={cn(
-                  'text-base font-medium transition-all',
-                  todo.completed && 'line-through text-muted-foreground'
+              <div className="flex items-center gap-2">
+                <p
+                  className={cn(
+                    'text-base font-medium transition-all',
+                    todo.completed && 'line-through text-muted-foreground'
+                  )}
+                >
+                  {todo.title}
+                </p>
+                {subtaskProgress && (
+                  <span className="text-xs text-muted-foreground">
+                    ({subtaskProgress.completed}/{subtaskProgress.total})
+                  </span>
                 )}
-              >
-                {todo.title}
-              </p>
+              </div>
+
+              {/* Subtask Progress */}
+              {subtaskProgress && (
+                <div className="mt-2">
+                  <Progress value={subtaskProgress.percentage} className="h-1.5" />
+                </div>
+              )}
 
               {/* Meta info */}
               <div className="flex flex-wrap items-center gap-2 mt-2">
+                {/* Subtask Toggle */}
+                <button
+                  onClick={() => setShowSubtasks(!showSubtasks)}
+                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showSubtasks ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                  งานย่อย
+                </button>
+
                 {/* Category Badge */}
                 {category && (
                   <span
@@ -193,6 +257,67 @@ export function TodoItem({ todo, onToggle, onDelete, onUpdate, categories, isDra
                   </span>
                 )}
               </div>
+
+              {/* Subtasks Section */}
+              {showSubtasks && (
+                <div className="mt-3 pl-2 border-l-2 border-border/50 space-y-2 animate-fade-in">
+                  {/* Add subtask input */}
+                  <div className="flex gap-2">
+                    <Input
+                      value={newSubtaskTitle}
+                      onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleAddSubtask();
+                      }}
+                      placeholder="เพิ่มงานย่อย..."
+                      className="h-8 text-sm bg-secondary/30"
+                    />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={handleAddSubtask}
+                      className="h-8 w-8"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {/* Subtask list */}
+                  {subtasks.map((subtask) => (
+                    <div key={subtask.id} className="flex items-center gap-2 group/subtask">
+                      <button
+                        onClick={() => onToggleSubtask(todo.id, subtask.id)}
+                        className={cn(
+                          'flex-shrink-0 w-4 h-4 rounded border transition-all flex items-center justify-center',
+                          subtask.completed
+                            ? 'bg-primary border-primary'
+                            : 'border-muted-foreground/30 hover:border-primary/50'
+                        )}
+                      >
+                        {subtask.completed && (
+                          <Check className="h-2.5 w-2.5 text-primary-foreground" />
+                        )}
+                      </button>
+                      <span
+                        className={cn(
+                          'flex-1 text-sm',
+                          subtask.completed && 'line-through text-muted-foreground'
+                        )}
+                      >
+                        {subtask.title}
+                      </span>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => onDeleteSubtask(todo.id, subtask.id)}
+                        className="h-6 w-6 opacity-0 group-hover/subtask:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </>
           )}
         </div>
