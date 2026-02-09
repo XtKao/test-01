@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Plus, Calendar, Clock, Flag, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Priority, Category } from '@/types/todo';
+import { Priority, Category, RecurrenceType } from '@/types/todo';
 import {
   Popover,
   PopoverContent,
@@ -12,6 +12,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
+import { RecurrenceSelector } from './RecurrenceSelector';
 
 interface TodoInputProps {
   onAdd: (
@@ -20,7 +21,10 @@ interface TodoInputProps {
     description?: string,
     dueDate?: Date,
     reminderTime?: Date,
-    categoryId?: string
+    categoryId?: string,
+    recurrenceType?: RecurrenceType,
+    recurrenceInterval?: number,
+    recurrenceDays?: string[],
   ) => void;
   categories: Category[];
 }
@@ -38,6 +42,9 @@ export function TodoInput({ onAdd, categories }: TodoInputProps) {
   const [reminderTime, setReminderTime] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('none');
+  const [recurrenceInterval, setRecurrenceInterval] = useState(1);
+  const [recurrenceDays, setRecurrenceDays] = useState<string[]>([]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,13 +57,19 @@ export function TodoInput({ onAdd, categories }: TodoInputProps) {
       reminder.setHours(hours, minutes, 0, 0);
     }
 
-    onAdd(title.trim(), priority, undefined, dueDate, reminder, selectedCategory);
+    onAdd(
+      title.trim(), priority, undefined, dueDate, reminder, selectedCategory,
+      recurrenceType, recurrenceInterval, recurrenceDays.length > 0 ? recurrenceDays : undefined,
+    );
     setTitle('');
     setPriority('medium');
     setDueDate(undefined);
     setReminderTime('');
     setSelectedCategory(undefined);
     setIsExpanded(false);
+    setRecurrenceType('none');
+    setRecurrenceInterval(1);
+    setRecurrenceDays([]);
   };
 
   const selectedCategoryData = categories.find(c => c.id === selectedCategory);
@@ -193,6 +206,18 @@ export function TodoInput({ onAdd, categories }: TodoInputProps) {
                 </div>
               </div>
             )}
+
+            {/* Recurrence */}
+            <RecurrenceSelector
+              recurrenceType={recurrenceType}
+              recurrenceInterval={recurrenceInterval}
+              recurrenceDays={recurrenceDays}
+              onChange={(type, interval, days) => {
+                setRecurrenceType(type);
+                setRecurrenceInterval(interval);
+                setRecurrenceDays(days || []);
+              }}
+            />
           </div>
         )}
       </div>

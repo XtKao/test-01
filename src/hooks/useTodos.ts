@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { Todo, Priority, FilterType, SortType, Category } from '@/types/todo';
+import { Todo, Priority, FilterType, SortType, Category, RecurrenceType } from '@/types/todo';
 import { toast } from 'sonner';
 
 export function useTodos() {
@@ -44,6 +44,10 @@ export function useTodos() {
         createdAt: new Date(todo.created_at),
         notified: todo.notified || false,
         order: todo.sort_order,
+        recurrenceType: (todo.recurrence_type || 'none') as Todo['recurrenceType'],
+        recurrenceInterval: todo.recurrence_interval || 1,
+        recurrenceDays: todo.recurrence_days || undefined,
+        recurrenceEndDate: todo.recurrence_end_date ? new Date(todo.recurrence_end_date) : undefined,
       }));
       setTodos(mappedTodos);
     }
@@ -87,7 +91,10 @@ export function useTodos() {
     description?: string,
     dueDate?: Date,
     reminderTime?: Date,
-    categoryId?: string
+    categoryId?: string,
+    recurrenceType: RecurrenceType = 'none',
+    recurrenceInterval: number = 1,
+    recurrenceDays?: string[],
   ) => {
     if (!user) return;
 
@@ -102,6 +109,9 @@ export function useTodos() {
         due_date: dueDate?.toISOString(),
         reminder_time: reminderTime?.toISOString(),
         sort_order: todos.length,
+        recurrence_type: recurrenceType,
+        recurrence_interval: recurrenceInterval,
+        recurrence_days: recurrenceDays,
       })
       .select()
       .single();
@@ -122,6 +132,10 @@ export function useTodos() {
         createdAt: new Date(data.created_at),
         notified: data.notified || false,
         order: data.sort_order,
+        recurrenceType: (data.recurrence_type || 'none') as RecurrenceType,
+        recurrenceInterval: data.recurrence_interval || 1,
+        recurrenceDays: data.recurrence_days || undefined,
+        recurrenceEndDate: data.recurrence_end_date ? new Date(data.recurrence_end_date) : undefined,
       };
       setTodos(prev => [newTodo, ...prev]);
       toast.success('เพิ่มงานสำเร็จ');
@@ -172,6 +186,10 @@ export function useTodos() {
     if (updates.reminderTime !== undefined) dbUpdates.reminder_time = updates.reminderTime?.toISOString();
     if (updates.notified !== undefined) dbUpdates.notified = updates.notified;
     if (updates.order !== undefined) dbUpdates.sort_order = updates.order;
+    if (updates.recurrenceType !== undefined) dbUpdates.recurrence_type = updates.recurrenceType;
+    if (updates.recurrenceInterval !== undefined) dbUpdates.recurrence_interval = updates.recurrenceInterval;
+    if (updates.recurrenceDays !== undefined) dbUpdates.recurrence_days = updates.recurrenceDays;
+    if (updates.recurrenceEndDate !== undefined) dbUpdates.recurrence_end_date = updates.recurrenceEndDate?.toISOString();
 
     const { error } = await supabase
       .from('todos')
@@ -340,6 +358,27 @@ export function useTodos() {
     return acc;
   }, {} as Record<string, { total: number; completed: number; percentage: number }>);
 
+  const importTodos = useCallback(async (data: { todos: Partial<Todo>[]; categories?: Partial<Category>[] }) => {
+    if (!user) return;
+
+    for (const t of data.todos) {
+      await supabase.from('todos').insert({
+        user_id: user.id,
+        title: t.title || 'Untitled',
+        description: t.description,
+        priority: t.priority || 'medium',
+        due_date: t.dueDate?.toISOString(),
+        reminder_time: t.reminderTime?.toISOString(),
+        sort_order: todos.length,
+        recurrence_type: t.recurrenceType || 'none',
+        recurrence_interval: t.recurrenceInterval || 1,
+        recurrence_days: t.recurrenceDays,
+      });
+    }
+
+    await fetchTodos();
+  }, [user, todos.length, fetchTodos]);
+
   return {
     todos: filteredAndSortedTodos,
     allTodos: todos,
@@ -366,5 +405,6 @@ export function useTodos() {
     filteredStats,
     categoryStats,
     refreshTodos: fetchTodos,
+    importTodos,
   };
 }

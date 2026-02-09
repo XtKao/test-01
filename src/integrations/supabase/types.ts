@@ -119,6 +119,10 @@ export type Database = {
           id: string
           notified: boolean | null
           priority: string
+          recurrence_days: string[] | null
+          recurrence_end_date: string | null
+          recurrence_interval: number
+          recurrence_type: string
           reminder_time: string | null
           sort_order: number
           title: string
@@ -134,6 +138,10 @@ export type Database = {
           id?: string
           notified?: boolean | null
           priority?: string
+          recurrence_days?: string[] | null
+          recurrence_end_date?: string | null
+          recurrence_interval?: number
+          recurrence_type?: string
           reminder_time?: string | null
           sort_order?: number
           title: string
@@ -149,6 +157,10 @@ export type Database = {
           id?: string
           notified?: boolean | null
           priority?: string
+          recurrence_days?: string[] | null
+          recurrence_end_date?: string | null
+          recurrence_interval?: number
+          recurrence_type?: string
           reminder_time?: string | null
           sort_order?: number
           title?: string
