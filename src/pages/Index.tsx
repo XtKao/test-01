@@ -10,6 +10,7 @@ import { CalendarView } from '@/components/CalendarView';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { UserMenu } from '@/components/UserMenu';
 import { SearchInput } from '@/components/SearchInput';
+import { ExportImport } from '@/components/ExportImport';
 import { useTodos } from '@/hooks/useTodos';
 import { useSubtasks } from '@/hooks/useSubtasks';
 import { useAuth } from '@/hooks/useAuth';
@@ -47,6 +48,7 @@ const Index = () => {
     totalStats,
     filteredStats,
     categoryStats,
+    importTodos,
   } = useTodos();
 
   const {
@@ -109,7 +111,7 @@ const Index = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-6 gap-2 flex-wrap">
             <TabsList className="grid grid-cols-2 w-auto">
               <TabsTrigger value="todos" className="flex items-center gap-2 px-4">
                 <ListTodo className="h-4 w-4" />
@@ -121,12 +123,20 @@ const Index = () => {
               </TabsTrigger>
             </TabsList>
             
-            <CategoryManager
-              categories={categories}
-              onAddCategory={addCategory}
-              onUpdateCategory={updateCategory}
-              onDeleteCategory={deleteCategory}
-            />
+            <div className="flex items-center gap-2">
+              <ExportImport
+                todos={allTodos}
+                categories={categories}
+                subtasks={subtasks}
+                onImport={importTodos}
+              />
+              <CategoryManager
+                categories={categories}
+                onAddCategory={addCategory}
+                onUpdateCategory={updateCategory}
+                onDeleteCategory={deleteCategory}
+              />
+            </div>
           </div>
 
           <TabsContent value="todos" className="space-y-6 mt-0">

@@ -1,4 +1,5 @@
 export type Priority = 'high' | 'medium' | 'low';
+export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly' | 'custom';
 
 export type Category = {
   id: string;
@@ -28,6 +29,10 @@ export interface Todo {
   notified?: boolean;
   order: number;
   subtasks?: Subtask[];
+  recurrenceType: RecurrenceType;
+  recurrenceInterval: number;
+  recurrenceDays?: string[];
+  recurrenceEndDate?: Date;
 }
 
 export type FilterType = 'all' | 'active' | 'completed';

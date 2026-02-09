@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Check, Trash2, Calendar, Clock, Edit3, X, GripVertical, Plus, ChevronDown, ChevronRight } from 'lucide-react';
+import { Check, Trash2, Calendar, Clock, Edit3, X, GripVertical, Plus, ChevronDown, ChevronRight, Repeat } from 'lucide-react';
 import { Todo, Priority, Category, Subtask } from '@/types/todo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -254,6 +254,17 @@ export function TodoItem({
                     <Clock className="h-3.5 w-3.5" />
                     {format(todo.reminderTime, 'HH:mm')}
                     {todo.notified && <span className="text-success">(แจ้งแล้ว)</span>}
+                  </span>
+                )}
+
+                {/* Recurrence Badge */}
+                {todo.recurrenceType && todo.recurrenceType !== 'none' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                    <Repeat className="h-3 w-3" />
+                    {todo.recurrenceType === 'daily' && `ทุก${todo.recurrenceInterval > 1 ? ` ${todo.recurrenceInterval}` : ''}วัน`}
+                    {todo.recurrenceType === 'weekly' && `ทุก${todo.recurrenceInterval > 1 ? ` ${todo.recurrenceInterval}` : ''}สัปดาห์`}
+                    {todo.recurrenceType === 'monthly' && `ทุก${todo.recurrenceInterval > 1 ? ` ${todo.recurrenceInterval}` : ''}เดือน`}
+                    {todo.recurrenceType === 'custom' && 'กำหนดเอง'}
                   </span>
                 )}
               </div>
