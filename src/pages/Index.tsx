@@ -179,7 +179,7 @@ const Index = () => {
                 subtasks={subtasks}
                 onAddSubtask={addSubtask}
                 onToggleSubtask={toggleSubtask}
-                onDeleteSubtask={onDeleteSubtask}
+                onDeleteSubtask={deleteSubtask}
                 onFetchSubtasks={fetchSubtasks}
                 attachments={attachments}
                 onUploadAttachment={uploadAttachment}

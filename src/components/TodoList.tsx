@@ -134,6 +134,7 @@ export function TodoList({
             onToggleSubtask={onToggleSubtask}
             onDeleteSubtask={onDeleteSubtask}
             onFetchSubtasks={onFetchSubtasks}
+            attachments={attachments?.[activeTodo.id] || []}
           />
         ) : null}
       </DragOverlay>
