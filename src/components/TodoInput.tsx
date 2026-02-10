@@ -27,6 +27,7 @@ interface TodoInputProps {
     recurrenceDays?: string[],
   ) => void;
   categories: Category[];
+  inputRef?: RefObject<HTMLInputElement>;
 }
 
 const priorityConfig = {
