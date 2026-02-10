@@ -187,7 +187,7 @@
 
 @layer utilities {
   .glass {
-    @apply bg-card/70 backdrop-blur-xl border border-border/50;
+    @apply bg-card/75 backdrop-blur-2xl border border-border/40 shadow-sm;
   }
 
   .text-gradient {
