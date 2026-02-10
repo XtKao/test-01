@@ -55,17 +55,9 @@ const priorityConfig = {
 };
 
 export function TodoItem({ 
-  todo, 
-  onToggle, 
-  onDelete, 
-  onUpdate, 
-  categories, 
-  isDragging,
-  subtasks,
-  onAddSubtask,
-  onToggleSubtask,
-  onDeleteSubtask,
-  onFetchSubtasks,
+  todo, onToggle, onDelete, onUpdate, categories, isDragging,
+  subtasks, onAddSubtask, onToggleSubtask, onDeleteSubtask, onFetchSubtasks,
+  attachments = [], onUploadAttachment, onDeleteAttachment, onFetchAttachments,
 }: TodoItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(todo.title);
