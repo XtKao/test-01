@@ -86,6 +86,13 @@ export function TodoItem({
     }
   }, [showSubtasks, subtasksLoaded, onFetchSubtasks, todo.id]);
 
+  useEffect(() => {
+    if (!attachmentsLoaded && onFetchAttachments) {
+      onFetchAttachments();
+      setAttachmentsLoaded(true);
+    }
+  }, [attachmentsLoaded, onFetchAttachments]);
+
   const handleSave = () => {
     if (editTitle.trim()) {
       onUpdate(todo.id, { title: editTitle.trim() });
