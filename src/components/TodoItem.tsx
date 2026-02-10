@@ -335,6 +335,18 @@ export function TodoItem({
                   ))}
                 </div>
               )}
+
+              {/* Attachments */}
+              {onUploadAttachment && onDeleteAttachment && (
+                <div className="mt-3">
+                  <AttachmentList
+                    attachments={attachments}
+                    onUpload={onUploadAttachment}
+                    onDelete={onDeleteAttachment}
+                    compact
+                  />
+                </div>
+              )}
             </>
           )}
         </div>
