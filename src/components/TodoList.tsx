@@ -110,6 +110,10 @@ export function TodoList({
                 onToggleSubtask={onToggleSubtask}
                 onDeleteSubtask={onDeleteSubtask}
                 onFetchSubtasks={onFetchSubtasks}
+                attachments={attachments?.[todo.id] || []}
+                onUploadAttachment={onUploadAttachment ? (file) => onUploadAttachment(todo.id, file) : undefined}
+                onDeleteAttachment={onDeleteAttachment ? (id) => onDeleteAttachment(todo.id, id) : undefined}
+                onFetchAttachments={onFetchAttachments ? () => onFetchAttachments(todo.id) : undefined}
               />
             </div>
           ))}
