@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, RefObject } from 'react';
 import { Plus, Calendar, Clock, Flag, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +27,7 @@ interface TodoInputProps {
     recurrenceDays?: string[],
   ) => void;
   categories: Category[];
+  inputRef?: RefObject<HTMLInputElement>;
 }
 
 const priorityConfig = {
@@ -35,7 +36,7 @@ const priorityConfig = {
   low: { label: 'ต่ำ', color: 'text-success', bg: 'bg-success/10' },
 };
 
-export function TodoInput({ onAdd, categories }: TodoInputProps) {
+export function TodoInput({ onAdd, categories, inputRef }: TodoInputProps) {
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
   const [dueDate, setDueDate] = useState<Date | undefined>();
@@ -79,10 +80,11 @@ export function TodoInput({ onAdd, categories }: TodoInputProps) {
       <div className="glass rounded-2xl p-4 shadow-card animate-fade-in">
         <div className="flex gap-3">
           <Input
+            ref={inputRef}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onFocus={() => setIsExpanded(true)}
-            placeholder="เพิ่มงานใหม่..."
+            placeholder="เพิ่มงานใหม่... (Ctrl+N)"
             className="flex-1 bg-secondary/50 border-0 h-12 text-base placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-primary/30"
           />
           <Button

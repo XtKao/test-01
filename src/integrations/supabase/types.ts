@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number
+          file_type: string
+          file_url: string
+          id: string
+          todo_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size?: number
+          file_type: string
+          file_url: string
+          id?: string
+          todo_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number
+          file_type?: string
+          file_url?: string
+          id?: string
+          todo_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attachments_todo_id_fkey"
+            columns: ["todo_id"]
+            isOneToOne: false
+            referencedRelation: "todos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           color: string

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Todo, Category, Subtask } from '@/types/todo';
 import { TodoItem } from './TodoItem';
 import { ListTodo } from 'lucide-react';
+import { Attachment } from '@/hooks/useAttachments';
 import {
   DndContext,
   closestCenter,
@@ -31,20 +32,16 @@ interface TodoListProps {
   onToggleSubtask: (todoId: string, subtaskId: string) => void;
   onDeleteSubtask: (todoId: string, subtaskId: string) => void;
   onFetchSubtasks: (todoId: string) => void;
+  attachments?: Record<string, Attachment[]>;
+  onUploadAttachment?: (todoId: string, file: File) => void;
+  onDeleteAttachment?: (todoId: string, attachmentId: string) => void;
+  onFetchAttachments?: (todoId: string) => void;
 }
 
 export function TodoList({ 
-  todos, 
-  onToggle, 
-  onDelete, 
-  onUpdate, 
-  onReorder, 
-  categories,
-  subtasks,
-  onAddSubtask,
-  onToggleSubtask,
-  onDeleteSubtask,
-  onFetchSubtasks,
+  todos, onToggle, onDelete, onUpdate, onReorder, categories,
+  subtasks, onAddSubtask, onToggleSubtask, onDeleteSubtask, onFetchSubtasks,
+  attachments, onUploadAttachment, onDeleteAttachment, onFetchAttachments,
 }: TodoListProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   
@@ -113,6 +110,10 @@ export function TodoList({
                 onToggleSubtask={onToggleSubtask}
                 onDeleteSubtask={onDeleteSubtask}
                 onFetchSubtasks={onFetchSubtasks}
+                attachments={attachments?.[todo.id] || []}
+                onUploadAttachment={onUploadAttachment ? (file) => onUploadAttachment(todo.id, file) : undefined}
+                onDeleteAttachment={onDeleteAttachment ? (id) => onDeleteAttachment(todo.id, id) : undefined}
+                onFetchAttachments={onFetchAttachments ? () => onFetchAttachments(todo.id) : undefined}
               />
             </div>
           ))}
@@ -133,6 +134,7 @@ export function TodoList({
             onToggleSubtask={onToggleSubtask}
             onDeleteSubtask={onDeleteSubtask}
             onFetchSubtasks={onFetchSubtasks}
+            attachments={attachments?.[activeTodo.id] || []}
           />
         ) : null}
       </DragOverlay>

@@ -9,6 +9,8 @@ import { th } from 'date-fns/locale';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Progress } from '@/components/ui/progress';
+import { AttachmentList } from './AttachmentList';
+import { Attachment } from '@/hooks/useAttachments';
 
 interface TodoItemProps {
   todo: Todo;
@@ -22,6 +24,10 @@ interface TodoItemProps {
   onToggleSubtask: (todoId: string, subtaskId: string) => void;
   onDeleteSubtask: (todoId: string, subtaskId: string) => void;
   onFetchSubtasks: (todoId: string) => void;
+  attachments?: Attachment[];
+  onUploadAttachment?: (file: File) => void;
+  onDeleteAttachment?: (attachmentId: string) => void;
+  onFetchAttachments?: () => void;
 }
 
 const priorityConfig = {
@@ -49,23 +55,16 @@ const priorityConfig = {
 };
 
 export function TodoItem({ 
-  todo, 
-  onToggle, 
-  onDelete, 
-  onUpdate, 
-  categories, 
-  isDragging,
-  subtasks,
-  onAddSubtask,
-  onToggleSubtask,
-  onDeleteSubtask,
-  onFetchSubtasks,
+  todo, onToggle, onDelete, onUpdate, categories, isDragging,
+  subtasks, onAddSubtask, onToggleSubtask, onDeleteSubtask, onFetchSubtasks,
+  attachments = [], onUploadAttachment, onDeleteAttachment, onFetchAttachments,
 }: TodoItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(todo.title);
   const [showSubtasks, setShowSubtasks] = useState(false);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [subtasksLoaded, setSubtasksLoaded] = useState(false);
+  const [attachmentsLoaded, setAttachmentsLoaded] = useState(false);
 
   const {
     attributes,
@@ -86,6 +85,13 @@ export function TodoItem({
       setSubtasksLoaded(true);
     }
   }, [showSubtasks, subtasksLoaded, onFetchSubtasks, todo.id]);
+
+  useEffect(() => {
+    if (!attachmentsLoaded && onFetchAttachments) {
+      onFetchAttachments();
+      setAttachmentsLoaded(true);
+    }
+  }, [attachmentsLoaded, onFetchAttachments]);
 
   const handleSave = () => {
     if (editTitle.trim()) {
@@ -327,6 +333,18 @@ export function TodoItem({
                       </Button>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Attachments */}
+              {onUploadAttachment && onDeleteAttachment && (
+                <div className="mt-3">
+                  <AttachmentList
+                    attachments={attachments}
+                    onUpload={onUploadAttachment}
+                    onDelete={onDeleteAttachment}
+                    compact
+                  />
                 </div>
               )}
             </>
