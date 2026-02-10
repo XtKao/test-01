@@ -64,6 +64,7 @@ export function TodoItem({
   const [showSubtasks, setShowSubtasks] = useState(false);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [subtasksLoaded, setSubtasksLoaded] = useState(false);
+  const [attachmentsLoaded, setAttachmentsLoaded] = useState(false);
 
   const {
     attributes,
