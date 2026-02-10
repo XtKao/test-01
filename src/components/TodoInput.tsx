@@ -36,7 +36,7 @@ const priorityConfig = {
   low: { label: 'ต่ำ', color: 'text-success', bg: 'bg-success/10' },
 };
 
-export function TodoInput({ onAdd, categories }: TodoInputProps) {
+export function TodoInput({ onAdd, categories, inputRef }: TodoInputProps) {
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
   const [dueDate, setDueDate] = useState<Date | undefined>();
