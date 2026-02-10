@@ -9,6 +9,8 @@ import { th } from 'date-fns/locale';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Progress } from '@/components/ui/progress';
+import { AttachmentList } from './AttachmentList';
+import { Attachment } from '@/hooks/useAttachments';
 
 interface TodoItemProps {
   todo: Todo;
@@ -22,6 +24,10 @@ interface TodoItemProps {
   onToggleSubtask: (todoId: string, subtaskId: string) => void;
   onDeleteSubtask: (todoId: string, subtaskId: string) => void;
   onFetchSubtasks: (todoId: string) => void;
+  attachments?: Attachment[];
+  onUploadAttachment?: (file: File) => void;
+  onDeleteAttachment?: (attachmentId: string) => void;
+  onFetchAttachments?: () => void;
 }
 
 const priorityConfig = {
