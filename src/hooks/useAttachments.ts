@@ -13,6 +13,40 @@ export interface Attachment {
   createdAt: Date;
 }
 
+// Generate a signed URL from a storage path
+async function getSignedUrl(storagePath: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from('todo-attachments')
+    .createSignedUrl(storagePath, 3600); // 1 hour expiry
+  if (error || !data?.signedUrl) {
+    console.error('Error creating signed URL:', error);
+    return '';
+  }
+  return data.signedUrl;
+}
+
+// Extract the storage path from a stored file_url value.
+// It could be a full public URL or already a relative path.
+function extractStoragePath(fileUrl: string): string {
+  try {
+    const url = new URL(fileUrl);
+    const marker = '/storage/v1/object/public/todo-attachments/';
+    const idx = url.pathname.indexOf(marker);
+    if (idx !== -1) {
+      return decodeURIComponent(url.pathname.substring(idx + marker.length));
+    }
+    // Also handle signed URL paths
+    const signedMarker = '/storage/v1/object/sign/todo-attachments/';
+    const sIdx = url.pathname.indexOf(signedMarker);
+    if (sIdx !== -1) {
+      return decodeURIComponent(url.pathname.substring(sIdx + signedMarker.length));
+    }
+  } catch {
+    // Not a URL – treat as a relative path already
+  }
+  return fileUrl;
+}
+
 export function useAttachments() {
   const { user } = useAuth();
   const [attachments, setAttachments] = useState<Record<string, Attachment[]>>({});
@@ -29,17 +63,25 @@ export function useAttachments() {
     if (error) {
       console.error('Error fetching attachments:', error);
     } else {
+      // Generate signed URLs for all attachments
+      const mapped = await Promise.all(
+        (data || []).map(async (a) => {
+          const storagePath = extractStoragePath(a.file_url);
+          const signedUrl = await getSignedUrl(storagePath);
+          return {
+            id: a.id,
+            todoId: a.todo_id,
+            fileName: a.file_name,
+            fileUrl: signedUrl || a.file_url,
+            fileType: a.file_type,
+            fileSize: a.file_size,
+            createdAt: new Date(a.created_at),
+          };
+        })
+      );
       setAttachments(prev => ({
         ...prev,
-        [todoId]: (data || []).map(a => ({
-          id: a.id,
-          todoId: a.todo_id,
-          fileName: a.file_name,
-          fileUrl: a.file_url,
-          fileType: a.file_type,
-          fileSize: a.file_size,
-          createdAt: new Date(a.created_at),
-        })),
+        [todoId]: mapped,
       }));
     }
   }, [user]);
@@ -59,17 +101,14 @@ export function useAttachments() {
       return;
     }
 
-    const { data: urlData } = supabase.storage
-      .from('todo-attachments')
-      .getPublicUrl(filePath);
-
+    // Store the storage path in the database (not a public URL)
     const { data, error } = await supabase
       .from('attachments')
       .insert({
         todo_id: todoId,
         user_id: user.id,
         file_name: file.name,
-        file_url: urlData.publicUrl,
+        file_url: filePath, // Store path, not URL
         file_type: file.type,
         file_size: file.size,
       })
@@ -80,11 +119,12 @@ export function useAttachments() {
       console.error('Error saving attachment:', error);
       toast.error('บันทึกไฟล์ไม่สำเร็จ');
     } else if (data) {
+      const signedUrl = await getSignedUrl(filePath);
       const newAttachment: Attachment = {
         id: data.id,
         todoId: data.todo_id,
         fileName: data.file_name,
-        fileUrl: data.file_url,
+        fileUrl: signedUrl || filePath,
         fileType: data.file_type,
         fileSize: data.file_size,
         createdAt: new Date(data.created_at),
@@ -101,11 +141,16 @@ export function useAttachments() {
     const attachment = attachments[todoId]?.find(a => a.id === attachmentId);
     if (!attachment) return;
 
-    // Extract path from URL
-    const url = new URL(attachment.fileUrl);
-    const pathParts = url.pathname.split('/storage/v1/object/public/todo-attachments/');
-    if (pathParts[1]) {
-      await supabase.storage.from('todo-attachments').remove([decodeURIComponent(pathParts[1])]);
+    // Look up the original storage path from the DB
+    const { data: dbAttachment } = await supabase
+      .from('attachments')
+      .select('file_url')
+      .eq('id', attachmentId)
+      .single();
+
+    if (dbAttachment) {
+      const storagePath = extractStoragePath(dbAttachment.file_url);
+      await supabase.storage.from('todo-attachments').remove([storagePath]);
     }
 
     const { error } = await supabase
